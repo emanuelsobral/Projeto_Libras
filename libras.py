@@ -46,7 +46,7 @@ with mp_maos.Hands(min_detection_confidence=min_det_conf, min_tracking_confidenc
                 gesto_joinha = distancias_dedos['polegar'] > 0.1 and all(distancia < 0.1 for dedo, distancia in distancias_dedos.items() if dedo != 'polegar')
                 
                 #gesto OLA
-                gesto_ola = all(distancia > 0.1 for dedo, distancia in distancias_dedos.items() if dedo in ['polegar', 'mindinho']) and all(distancia < 0.1 for dedo, distancia in distancias_dedos.items() if dedo not in ['polegar', 'mindinho'])
+                gesto_ola = all(distancia > 0.1 for dedo, distancia in distancias_dedos.items() if dedo in ['mindinho']) and all(distancia < 0.1 for dedo, distancia in distancias_dedos.items() if dedo not in ['mindinho'])
                 
                 #gesto TE AMO
                 gesto_teAmo = all(distancia > 0.1 for dedo, distancia in distancias_dedos.items() if dedo in ['polegar', 'indicador', 'mindinho']) and all(distancia < 0.1 for dedo, distancia in distancias_dedos.items() if dedo not in ['polegar', 'indicador', 'mindinho'])
@@ -75,7 +75,7 @@ with mp_maos.Hands(min_detection_confidence=min_det_conf, min_tracking_confidenc
                     cv2.putText(imagem, 'Qual seu nome?', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
                 if gesto_naoEntendi:
                     cv2.putText(imagem, 'Nao entendi!', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
-        
+
         cv2.imshow('MediaPipe Hands', imagem)
         
         if cv2.waitKey(10) & 0xFF == ord('q'):

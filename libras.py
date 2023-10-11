@@ -2,39 +2,61 @@ import cv2
 import mediapipe as mp
 import numpy as np
 
-mp_drawing = mp.solutions.drawing_utils
-mp_hands = mp.solutions.hands
+mp_desenho = mp.solutions.drawing_utils
+mp_maos = mp.solutions.hands
 
 cap = cv2.VideoCapture(0)
 
-prev_thumb_tip = None
-
-with mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) as hands: 
+with mp_maos.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) as maos: 
     while cap.isOpened():
         ret, frame = cap.read()
         
-        image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        imagem = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         
-        results = hands.process(image)
+        resultados = maos.process(imagem)
         
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+        imagem = cv2.cvtColor(imagem, cv2.COLOR_RGB2BGR)
         
-        if results.multi_hand_landmarks:
-            for hand_landmarks in results.multi_hand_landmarks:
-                mp_drawing.draw_landmarks(image, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+        if resultados.multi_hand_landmarks:
+            for marcos_mao in resultados.multi_hand_landmarks:
+                mp_desenho.draw_landmarks(imagem, marcos_mao, mp_maos.HAND_CONNECTIONS)
                 
-                thumb_tip = np.array([hand_landmarks.landmark[mp_hands.HandLandmark.THUMB_TIP].x, hand_landmarks.landmark[mp_hands.HandLandmark.THUMB_TIP].y])
-                index_finger_base = np.array([hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_MCP].x, hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_MCP].y])
+                #dicionario de dedos
+                pontas_dedos = {
+                    'polegar': np.array([marcos_mao.landmark[mp_maos.HandLandmark.THUMB_TIP].x, marcos_mao.landmark[mp_maos.HandLandmark.THUMB_TIP].y]),
+                    'indicador': np.array([marcos_mao.landmark[mp_maos.HandLandmark.INDEX_FINGER_TIP].x, marcos_mao.landmark[mp_maos.HandLandmark.INDEX_FINGER_TIP].y]),
+                    'medio': np.array([marcos_mao.landmark[mp_maos.HandLandmark.MIDDLE_FINGER_TIP].x, marcos_mao.landmark[mp_maos.HandLandmark.MIDDLE_FINGER_TIP].y]),
+                    'anelar': np.array([marcos_mao.landmark[mp_maos.HandLandmark.RING_FINGER_TIP].x, marcos_mao.landmark[mp_maos.HandLandmark.RING_FINGER_TIP].y]),
+                    'mindinho': np.array([marcos_mao.landmark[mp_maos.HandLandmark.PINKY_TIP].x, marcos_mao.landmark[mp_maos.HandLandmark.PINKY_TIP].y])
+                }
                 
-                if prev_thumb_tip is not None and np.linalg.norm(thumb_tip - prev_thumb_tip) > 0.01:
-                    cv2.putText(image, 'Ola!', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+                #Checa se o dedo esta em pe ou dobrado
+                distancias_dedos = {
+                    'polegar': np.linalg.norm(pontas_dedos['polegar'] - np.array([marcos_mao.landmark[mp_maos.HandLandmark.THUMB_MCP].x, marcos_mao.landmark[mp_maos.HandLandmark.THUMB_MCP].y])),
+                    'indicador': np.linalg.norm(pontas_dedos['indicador'] - np.array([marcos_mao.landmark[mp_maos.HandLandmark.INDEX_FINGER_MCP].x, marcos_mao.landmark[mp_maos.HandLandmark.INDEX_FINGER_MCP].y])),
+                    'medio': np.linalg.norm(pontas_dedos['medio'] - np.array([marcos_mao.landmark[mp_maos.HandLandmark.MIDDLE_FINGER_MCP].x, marcos_mao.landmark[mp_maos.HandLandmark.MIDDLE_FINGER_MCP].y])),
+                    'anelar': np.linalg.norm(pontas_dedos['anelar'] - np.array([marcos_mao.landmark[mp_maos.HandLandmark.RING_FINGER_MCP].x, marcos_mao.landmark[mp_maos.HandLandmark.RING_FINGER_MCP].y])),
+                    'mindinho': np.linalg.norm(pontas_dedos['mindinho'] - np.array([marcos_mao.landmark[mp_maos.HandLandmark.PINKY_MCP].x, marcos_mao.landmark[mp_maos.HandLandmark.PINKY_MCP].y]))
+                }
                 
-                prev_thumb_tip = thumb_tip
+                #gesto JOINHA
+                gesto_joinha = distancias_dedos['polegar'] > 0.1 and all(distancia < 0.1 for dedo, distancia in distancias_dedos.items() if dedo != 'polegar')
+                
+                #gesto OLA
+                gesto_ola = all(distancia > 0.1 for dedo, distancia in distancias_dedos.items() if dedo in ['polegar', 'indicador']) and all(distancia < 0.1 for dedo, distancia in distancias_dedos.items() if dedo not in ['polegar', 'indicador'])
+                
+                #Mostrar mensagem na tela de acordo com o gesto
+                if gesto_joinha:
+                    cv2.putText(imagem, 'Joinha!', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+                elif gesto_ola:
+                    cv2.putText(imagem, 'Ola!', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
         
-        cv2.imshow('MediaPipe Hands', image)
+        cv2.imshow('MediaPipe Hands', imagem)
         
         if cv2.waitKey(10) & 0xFF == ord('q'):
             break
 
 cap.release()
 cv2.destroyAllWindows()
+
+

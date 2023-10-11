@@ -7,7 +7,10 @@ mp_maos = mp.solutions.hands
 
 cap = cv2.VideoCapture(0)
 
-with mp_maos.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) as maos: 
+min_det_conf = 0.7
+min_track_conf = 0.7
+
+with mp_maos.Hands(min_detection_confidence=min_det_conf, min_tracking_confidence=min_track_conf) as maos: 
     while cap.isOpened():
         ret, frame = cap.read()
         
@@ -43,13 +46,35 @@ with mp_maos.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) as
                 gesto_joinha = distancias_dedos['polegar'] > 0.1 and all(distancia < 0.1 for dedo, distancia in distancias_dedos.items() if dedo != 'polegar')
                 
                 #gesto OLA
-                gesto_ola = all(distancia > 0.1 for dedo, distancia in distancias_dedos.items() if dedo in ['polegar', 'indicador']) and all(distancia < 0.1 for dedo, distancia in distancias_dedos.items() if dedo not in ['polegar', 'indicador'])
+                gesto_ola = all(distancia > 0.1 for dedo, distancia in distancias_dedos.items() if dedo in ['polegar', 'mindinho']) and all(distancia < 0.1 for dedo, distancia in distancias_dedos.items() if dedo not in ['polegar', 'mindinho'])
                 
+                #gesto TE AMO
+                gesto_teAmo = all(distancia > 0.1 for dedo, distancia in distancias_dedos.items() if dedo in ['polegar', 'indicador', 'mindinho']) and all(distancia < 0.1 for dedo, distancia in distancias_dedos.items() if dedo not in ['polegar', 'indicador', 'mindinho'])
+
+                #gesto LEGAL
+                gesto_legal = all(distancia > 0.1 for dedo, distancia in distancias_dedos.items() if dedo in ['indicador', 'medio', 'anelar', 'mindinho']) and all(distancia < 0.1 for dedo, distancia in distancias_dedos.items() if dedo not in ['indicador', 'medio', 'anelar', 'mindinho'])
+
+                #gesto QUAL SEU NOME
+                gesto_nome = all(distancia > 0.1 for dedo, distancia in distancias_dedos.items() if dedo in ['indicador', 'medio']) and all(distancia < 0.1 for dedo, distancia in distancias_dedos.items() if dedo not in ['indicador', 'medio'])
+
+                #gesto NAO ENTENDI
+                gesto_naoEntendi = all(distancia > 0.1 for dedo, distancia in distancias_dedos.items() if dedo in ['indicador', 'medio', 'anelar']) and all(distancia < 0.1 for dedo, distancia in distancias_dedos.items() if dedo not in ['indicador', 'medio', 'anelar'])
+
+
+
                 #Mostrar mensagem na tela de acordo com o gesto
                 if gesto_joinha:
-                    cv2.putText(imagem, 'Joinha!', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
-                elif gesto_ola:
+                    cv2.putText(imagem, 'OK!', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+                if gesto_ola:
                     cv2.putText(imagem, 'Ola!', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+                if gesto_teAmo:
+                    cv2.putText(imagem, 'Te amo!', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+                if gesto_legal:
+                    cv2.putText(imagem, 'Legal!', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+                if gesto_nome:
+                    cv2.putText(imagem, 'Qual seu nome?', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+                if gesto_naoEntendi:
+                    cv2.putText(imagem, 'Nao entendi!', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
         
         cv2.imshow('MediaPipe Hands', imagem)
         
@@ -58,5 +83,3 @@ with mp_maos.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) as
 
 cap.release()
 cv2.destroyAllWindows()
-
-
